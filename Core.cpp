@@ -21,8 +21,7 @@ void Core::initialize() {
     I = 0;
     pc = 0x200;
 
-    for (unsigned char &i: gfx)
-        i = false;
+    clearDisplay();
 
     delay_timer = 0;
     sound_timer = 0;
@@ -96,6 +95,12 @@ void Core::emulateCycle() {
     executeOpcode();
 
     updateTimers();
+}
+
+void Core::drawGraphics() {
+}
+
+void Core::setKeys() {
 }
 
 void Core::fetchOpcode() {
@@ -192,4 +197,13 @@ void Core::updateTimers() {
             std::cout << "BEEP!" << std::endl;
         sound_timer--;
     }
+}
+
+void Core::display(Opcode decodedOpcode) {
+    // TODO implement
+}
+
+void Core::clearDisplay() {
+    for (unsigned char &i: gfx)
+        i = false;
 }

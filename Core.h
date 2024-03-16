@@ -47,6 +47,7 @@ private:
     void updateTimers();
 
     void display(Opcode decodedOpcode);
+    void clearDisplay();
 };
 
 
