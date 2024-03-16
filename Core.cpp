@@ -102,6 +102,86 @@ void Core::fetchOpcode() {
     opcode = memory[pc] << 8 | memory[pc + 1];
 }
 
+void Core::executeOpcode() {
+    auto decodedOpcode = Opcode(opcode);
+
+    switch (decodedOpcode.getInstruction()) {
+        case 0x0000:
+            // TODO: implement
+            break;
+
+        case 0x1000:
+            pc = decodedOpcode.getNnn();
+            break;
+
+        case 0x2000:
+            stack[sp] = pc;
+            sp++;
+            pc = decodedOpcode.getNnn();
+            break;
+
+        case 0x3000:
+            if (V[decodedOpcode.getX()] == decodedOpcode.getKk())
+                pc += 2;
+            break;
+
+        case 0x4000:
+            if (V[decodedOpcode.getX()] != decodedOpcode.getKk())
+                pc += 2;
+            break;
+
+        case 0x5000:
+            if (V[decodedOpcode.getX()] == V[decodedOpcode.getY()])
+                pc += 2;
+            break;
+
+        case 0x6000:
+            V[decodedOpcode.getX()] = decodedOpcode.getKk();
+            break;
+
+        case 0x7000:
+            V[decodedOpcode.getX()] += decodedOpcode.getKk();
+            break;
+
+        case 0x8000:
+            // TODO: implement
+            break;
+
+        case 0x9000:
+            if (V[decodedOpcode.getX()] != V[decodedOpcode.getY()])
+                pc += 2;
+            break;
+
+        case 0xA000:
+            I = decodedOpcode.getNnn();
+            break;
+
+        case 0xB000:
+            pc = V[0] + decodedOpcode.getNnn();
+            break;
+
+        case 0xC000:
+            V[decodedOpcode.getX()] = (random() % 255) & decodedOpcode.getKk();
+            break;
+
+        case 0xD000:
+            display(decodedOpcode);
+            break;
+
+        case 0xE000:
+            // TODO: implement (kbd conditions)
+            break;
+
+        case 0xF000:
+            // TODO: implement (kbd actions)
+            break;
+
+        default:
+            std::cerr << "Unknown opcode: " << std::hex << opcode << std::endl;
+            exit(1);
+    }
+}
+
 void Core::updateTimers() {
     if (delay_timer > 0)
         delay_timer--;
