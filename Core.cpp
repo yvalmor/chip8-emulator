@@ -84,10 +84,6 @@ void Core::loadGame(const char *game) {
     file.close();
 
     std::cout << "Loaded " << game << " into memory" << std::endl;
-
-    // TODO: remove this
-    for (int i = 0; i < size; i++)
-        std::cout << std::hex << memory[i + 0x200] << " ";
 }
 
 void Core::emulateCycle() {
@@ -110,7 +106,7 @@ void Core::fetchOpcode() {
 void Core::executeOpcode() {
     auto decodedOpcode = Opcode(opcode);
 
-    switch (decodedOpcode.getInstruction()) {
+    switch (decodedOpcode.getOpcode() & 0xF000) {
         case 0x0000:
             executeOpcodeType0(decodedOpcode);
             break;
@@ -127,17 +123,17 @@ void Core::executeOpcode() {
 
         case 0x3000:
             if (V[decodedOpcode.getX()] == decodedOpcode.getKk())
-                pc += 2;
+                pc++;
             break;
 
         case 0x4000:
             if (V[decodedOpcode.getX()] != decodedOpcode.getKk())
-                pc += 2;
+                pc++;
             break;
 
         case 0x5000:
             if (V[decodedOpcode.getX()] == V[decodedOpcode.getY()])
-                pc += 2;
+                pc++;
             break;
 
         case 0x6000:
@@ -154,7 +150,7 @@ void Core::executeOpcode() {
 
         case 0x9000:
             if (V[decodedOpcode.getX()] != V[decodedOpcode.getY()])
-                pc += 2;
+                pc++;
             break;
 
         case 0xA000:
@@ -185,10 +181,12 @@ void Core::executeOpcode() {
             std::cerr << "Unknown opcode: " << std::hex << opcode << std::endl;
             exit(1);
     }
+
+    pc++;
 }
 
 void Core::executeOpcodeType0(Opcode decodedOpcode) {
-    switch (decodedOpcode.getInstruction() & 0x00FF) {
+    switch (decodedOpcode.getOpcode() & 0x00FF) {
         case 0x00E0:
             clearDisplay();
             break;
@@ -205,7 +203,7 @@ void Core::executeOpcodeType0(Opcode decodedOpcode) {
 }
 
 void Core::executeOpcodeType8(Opcode decodedOpcode) {
-    switch (decodedOpcode.getInstruction() & 0xF00F) {
+    switch (decodedOpcode.getOpcode() & 0xF00F) {
         case 0x8000:
             V[decodedOpcode.getX()] = V[decodedOpcode.getY()];
             break;
@@ -254,15 +252,15 @@ void Core::executeOpcodeType8(Opcode decodedOpcode) {
 }
 
 void Core::executeOpcodeTypeE(Opcode decodedOpcode) {
-    switch (decodedOpcode.getInstruction() & 0xF0FF) {
+    switch (decodedOpcode.getOpcode() & 0xF0FF) {
         case 0XE09E:
             if (key[V[decodedOpcode.getX()]])
-                pc += 2;
+                pc++;
             break;
 
         case 0XE0A1:
             if (!key[V[decodedOpcode.getX()]])
-                pc += 2;
+                pc++;
             break;
 
         default:
@@ -274,7 +272,7 @@ void Core::executeOpcodeTypeE(Opcode decodedOpcode) {
 void Core::executeOpcodeTypeF(Opcode decodedOpcode) {
     auto opcodeX = decodedOpcode.getX();
 
-    switch (decodedOpcode.getInstruction() & 0xF0FF) {
+    switch (decodedOpcode.getOpcode() & 0xF0FF) {
         case 0xF007:
             V[opcodeX] = delay_timer;
             break;
@@ -330,7 +328,25 @@ void Core::updateTimers() {
 }
 
 void Core::display(Opcode decodedOpcode) {
-    // TODO implement
+    unsigned char x = V[decodedOpcode.getX()];
+    unsigned char y = V[decodedOpcode.getY()];
+    unsigned char height = decodedOpcode.getN();
+    unsigned char pixel;
+
+    V[0xF] = 0;
+
+    for (unsigned char yline = 0; yline < height; yline++) {
+        pixel = memory[I + yline];
+        for (unsigned char xline = 0; xline < 8; xline++) {
+            if ((pixel & (0x80 >> xline)) != 0) {
+                if (gfx[(x + xline + ((y + yline) * 64))] == 1)
+                    V[0xF] = 1;
+                gfx[x + xline + ((y + yline) * 64)] ^= 1;
+            }
+        }
+    }
+
+    drawFlag = true;
 }
 
 void Core::clearDisplay() {
