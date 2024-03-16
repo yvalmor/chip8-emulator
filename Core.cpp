@@ -97,3 +97,7 @@ void Core::emulateCycle() {
 
     updateTimers();
 }
+
+void Core::fetchOpcode() {
+    opcode = memory[pc] << 8 | memory[pc + 1];
+}
