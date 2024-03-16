@@ -112,7 +112,7 @@ void Core::executeOpcode() {
 
     switch (decodedOpcode.getInstruction()) {
         case 0x0000:
-            // TODO: implement
+            executeOpcodeType0(decodedOpcode);
             break;
 
         case 0x1000:
@@ -149,7 +149,7 @@ void Core::executeOpcode() {
             break;
 
         case 0x8000:
-            // TODO: implement
+            executeOpcodeType8(decodedOpcode);
             break;
 
         case 0x9000:
@@ -174,16 +174,146 @@ void Core::executeOpcode() {
             break;
 
         case 0xE000:
-            // TODO: implement (kbd conditions)
+            executeOpcodeTypeE(decodedOpcode);
             break;
 
         case 0xF000:
-            // TODO: implement (kbd actions)
+            executeOpcodeTypeF(decodedOpcode);
             break;
 
         default:
             std::cerr << "Unknown opcode: " << std::hex << opcode << std::endl;
             exit(1);
+    }
+}
+
+void Core::executeOpcodeType0(Opcode decodedOpcode) {
+    switch (decodedOpcode.getInstruction() & 0x00FF) {
+        case 0x00E0:
+            clearDisplay();
+            break;
+
+        case 0x00EE:
+            pc = stack[sp];
+            sp--;
+            break;
+
+        default:
+            pc = decodedOpcode.getNnn();
+            break;
+    }
+}
+
+void Core::executeOpcodeType8(Opcode decodedOpcode) {
+    switch (decodedOpcode.getInstruction() & 0xF00F) {
+        case 0x8000:
+            V[decodedOpcode.getX()] = V[decodedOpcode.getY()];
+            break;
+
+        case 0x8001:
+            V[decodedOpcode.getX()] |= V[decodedOpcode.getY()];
+            break;
+
+        case 0x8002:
+            V[decodedOpcode.getX()] &= V[decodedOpcode.getY()];
+            break;
+
+        case 0x8003:
+            V[decodedOpcode.getX()] ^= V[decodedOpcode.getY()];
+            break;
+
+        case 0x8004:
+            V[0xF] = ((unsigned int) V[decodedOpcode.getX()] + V[decodedOpcode.getY()] > 255);
+            V[decodedOpcode.getX()] += V[decodedOpcode.getY()];
+            break;
+
+        case 0x8005:
+            V[0xF] = (V[decodedOpcode.getX()] > V[decodedOpcode.getY()]);
+            V[decodedOpcode.getX()] -= V[decodedOpcode.getY()];
+            break;
+
+        case 0x8006:
+            V[0xF] = V[decodedOpcode.getX()] & 0x1;
+            V[decodedOpcode.getX()] >>= 1;
+            break;
+
+        case 0x8007:
+            V[0xF] = (V[decodedOpcode.getY()] > V[decodedOpcode.getX()]);
+            V[decodedOpcode.getX()] = V[decodedOpcode.getY()] - V[decodedOpcode.getX()];
+            break;
+
+        case 0x800E:
+            V[0xF] = V[decodedOpcode.getX()] >> 7;
+            V[decodedOpcode.getX()] <<= 1;
+            break;
+
+        default:
+            std::cerr << "Unknown opcode: " << std::hex << opcode << std::endl;
+            exit(1);
+    }
+}
+
+void Core::executeOpcodeTypeE(Opcode decodedOpcode) {
+    switch (decodedOpcode.getInstruction() & 0xF0FF) {
+        case 0XE09E:
+            if (key[V[decodedOpcode.getX()]])
+                pc += 2;
+            break;
+
+        case 0XE0A1:
+            if (!key[V[decodedOpcode.getX()]])
+                pc += 2;
+            break;
+
+        default:
+            std::cerr << "Unknown opcode: " << std::hex << opcode << std::endl;
+            exit(1);
+    }
+}
+
+void Core::executeOpcodeTypeF(Opcode decodedOpcode) {
+    auto opcodeX = decodedOpcode.getX();
+
+    switch (decodedOpcode.getInstruction() & 0xF0FF) {
+        case 0xF007:
+            V[opcodeX] = delay_timer;
+            break;
+
+        case 0xF00A:
+            // TODO: implement wait until key press
+            break;
+
+        case 0xF015:
+            delay_timer = V[opcodeX];
+            break;
+
+        case 0xF018:
+            sound_timer = V[opcodeX];
+            break;
+
+        case 0xF01E:
+            I += V[opcodeX];
+            break;
+
+        case 0xF029:
+            I = V[opcodeX] * 5;
+            break;
+
+        case 0xF033:
+            memory[I] = V[opcodeX] / 100;
+            memory[I + 1] = (V[opcodeX] / 10) % 10;
+            memory[I + 2] = V[opcodeX] % 10;
+            break;
+
+        case 0xF055:
+            for (short index = 0; index < opcodeX; index++)
+                memory[I + index] = V[index];
+            break;
+
+        case 0xF065:
+            for (short index = 0; index < opcodeX; index++)
+                V[I + index] = memory[index];
+            break;
     }
 }
 

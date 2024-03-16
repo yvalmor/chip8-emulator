@@ -44,6 +44,11 @@ private:
     void fetchOpcode();
     void executeOpcode();
 
+    void executeOpcodeType0(Opcode decodedOpcode);
+    void executeOpcodeType8(Opcode decodedOpcode);
+    void executeOpcodeTypeE(Opcode decodedOpcode);
+    void executeOpcodeTypeF(Opcode decodedOpcode);
+
     void updateTimers();
 
     void display(Opcode decodedOpcode);
