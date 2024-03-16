@@ -61,3 +61,32 @@ void Core::loadFontSet() {
     for (int i = 0; i < 80; i++)
         memory[i] = fontSet[i];
 }
+
+void Core::loadGame(const char *game) {
+    std::ifstream file;
+    file.open(game, std::ios::binary);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << game << std::endl;
+        exit(1);
+    }
+
+    file.seekg(0, std::ios::end);
+    long size = file.tellg();
+
+    if (size > 4096 - 0x200) {
+        std::cerr << "Error: ROM too large" << std::endl;
+        exit(1);
+    }
+
+    file.seekg(0, std::ios::beg);
+    file.read(reinterpret_cast<char *>(memory + 0x200), size);
+
+    file.close();
+
+    std::cout << "Loaded " << game << " into memory" << std::endl;
+
+    // TODO: remove this
+    for (int i = 0; i < size; i++)
+        std::cout << std::hex << memory[i + 0x200] << " ";
+}
