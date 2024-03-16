@@ -90,3 +90,10 @@ void Core::loadGame(const char *game) {
     for (int i = 0; i < size; i++)
         std::cout << std::hex << memory[i + 0x200] << " ";
 }
+
+void Core::emulateCycle() {
+    fetchOpcode();
+    executeOpcode();
+
+    updateTimers();
+}
