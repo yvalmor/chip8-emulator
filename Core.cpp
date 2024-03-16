@@ -101,3 +101,15 @@ void Core::emulateCycle() {
 void Core::fetchOpcode() {
     opcode = memory[pc] << 8 | memory[pc + 1];
 }
+
+void Core::updateTimers() {
+    if (delay_timer > 0)
+        delay_timer--;
+
+    if (sound_timer > 0) {
+        if (sound_timer == 1)
+            // TODO: implement sound
+            std::cout << "BEEP!" << std::endl;
+        sound_timer--;
+    }
+}
