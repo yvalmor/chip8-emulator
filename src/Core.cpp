@@ -94,9 +94,11 @@ void Core::emulateCycle() {
 }
 
 void Core::drawGraphics() {
+    // TODO: link to graphics
 }
 
 void Core::setKeys() {
+    // TODO: link to input
 }
 
 void Core::fetchOpcode() {
@@ -162,7 +164,7 @@ void Core::executeOpcode() {
             break;
 
         case 0xC000:
-            V[decodedOpcode.getX()] = (random() % 255) & decodedOpcode.getKk();
+            V[decodedOpcode.getX()] = (rand() % 255) & decodedOpcode.getKk();
             break;
 
         case 0xD000:
